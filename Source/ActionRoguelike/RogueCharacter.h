@@ -6,6 +6,13 @@
 #include "GameFramework/Character.h"
 #include "RogueCharacter.generated.h"
 
+
+struct FInputActionValue;
+struct FInputActionInstance;
+class UCameraComponent;
+class USpringArmComponent;
+class UInputAction;
+
 UCLASS()
 class ACTIONROGUELIKE_API ARogueCharacter : public ACharacter
 {
@@ -18,6 +25,22 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	TObjectPtr<UInputAction> Input_Move;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> Input_Look;
+
+	UPROPERTY(VisibleAnywhere, Category="Components")
+	TObjectPtr<UCameraComponent> CameraComponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<USpringArmComponent> SpringArmComponent;
+
+	void Move(const FInputActionValue& InValue);
+
+	void Look(const FInputActionInstance& InValue);
 
 public:	
 	// Called every frame
