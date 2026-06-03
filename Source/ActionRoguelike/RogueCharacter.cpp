@@ -3,11 +3,15 @@
 
 #include "RogueCharacter.h"
 
+#include "RogueProjectileMagic.h"
+
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "InputAction.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ARogueCharacter::ARogueCharacter()
@@ -21,6 +25,9 @@ ARogueCharacter::ARogueCharacter()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComponent->SetupAttachment(SpringArmComponent);
 
+	MuzzleSocketName = "Muzzle_01";
+	AttackTimerDelayTime = 0.2f;	
+	
 	//// Dont' rotate character with the camera
 	//bUseControllerRotationYaw = false;
 	//bUseControllerRotationPitch = false;
@@ -31,6 +38,8 @@ ARogueCharacter::ARogueCharacter()
 
 	//// Camera should NOT rotate relative to arm
 	//CameraComponent->bUsePawnControlRotation = false;
+	
+	JumpMaxHoldTime = JumpTime_Max;
 }
 
 // Called when the game starts or when spawned
@@ -38,13 +47,6 @@ void ARogueCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-}
-
-// Called every frame
-void ARogueCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -56,6 +58,9 @@ void ARogueCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 	EnhancedInput->BindAction(Input_Move, ETriggerEvent::Triggered, this, &ARogueCharacter::Move);
 	EnhancedInput->BindAction(Input_Look, ETriggerEvent::Triggered, this, &ARogueCharacter::Look);
+	EnhancedInput->BindAction(Input_Jump, ETriggerEvent::Completed, this, &ARogueCharacter::Jump_Start);
+	EnhancedInput->BindAction(Input_Jump, ETriggerEvent::Canceled, this, &ARogueCharacter::Jump_End);
+	EnhancedInput->BindAction(Input_PrimaryAttack, ETriggerEvent::Triggered, this, &ARogueCharacter::PrimaryAttack);
 }
 
 void ARogueCharacter::Move(const FInputActionValue& InValue)
@@ -71,7 +76,7 @@ void ARogueCharacter::Move(const FInputActionValue& InValue)
 	AddMovementInput(ControlRot.Vector(), InputValue.X);
 
 	// Sideways
-	FVector RightDirection = ControlRot.RotateVector(FVector::RightVector);
+	const FVector RightDirection = ControlRot.RotateVector(FVector::RightVector);
 	AddMovementInput(RightDirection, InputValue.Y);
 }
 
@@ -84,4 +89,48 @@ void ARogueCharacter::Look(const FInputActionInstance& InValue)
 
 	// Mouse Y ->Pitch
 	AddControllerPitchInput(InputValue.Y);
+}
+
+void ARogueCharacter::Jump_Start()
+{
+	Jump();
+}
+
+void ARogueCharacter::Jump_End()
+{
+	StopJumping();
+}
+
+void ARogueCharacter::PrimaryAttack()
+{
+	PlayAnimMontage(AttackMontage);
+	
+	FTimerHandle AttackTimerHandle;
+	
+	UNiagaraFunctionLibrary::SpawnSystemAttached(CastingEffect, GetMesh(), MuzzleSocketName, 
+		FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::Type::SnapToTarget, true);
+	
+	UGameplayStatics::PlaySound2D(this, CastingSound);
+	
+	GetWorldTimerManager().SetTimer(AttackTimerHandle, this,&ARogueCharacter::AttackTimerElapsed, AttackTimerDelayTime);
+}
+
+void ARogueCharacter::AttackTimerElapsed()
+{
+	const FVector SpawnLocation = GetMesh()->GetSocketLocation(MuzzleSocketName);
+	const FRotator SpawnRotation = GetControlRotation();
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Instigator = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	
+	AActor* NewProjectile = GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
+	
+	MoveIgnoreActorAdd(NewProjectile);
+}
+
+// Called every frame
+void ARogueCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
 }
