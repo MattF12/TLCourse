@@ -120,7 +120,7 @@ void ARoguePlayerCharacter::AttackTimerElapsed(TSubclassOf<ARogueProjectile> Pro
 	FHitResult Hit;
 	if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_PROJECTILE, QueryParams))
 	{
-		(Hit.Location - SpawnLocation).Rotation();	
+		SpawnRotation = (Hit.Location - SpawnLocation).Rotation();	
 	}
 	
 	AActor* NewProjectile = GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
@@ -149,5 +149,10 @@ float ARoguePlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent 
 	ActionSystemComponent->ApplyHeathChange(-ActualDamage);
 	
 	return ActualDamage;
+}
+
+URogueActionSystemComponent* ARoguePlayerCharacter::GetActionSystemComponent()
+{
+	return ActionSystemComponent;
 }
 

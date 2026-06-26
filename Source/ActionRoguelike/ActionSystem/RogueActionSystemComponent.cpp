@@ -12,20 +12,27 @@ URogueActionSystemComponent::URogueActionSystemComponent()
 	
 }
 
-void URogueActionSystemComponent::ApplyHeathChange(float InValueChange)
+bool URogueActionSystemComponent::ApplyHeathChange(float InValueChange)
 {
+	bool bHealthChanged = false;
 	const float OldHealth = Attributes.Health;
 	
-	float MaxHealth = GetDefault<URogueActionSystemComponent>()->Attributes.Health;
+	Attributes.Health = FMath::Clamp(Attributes.Health + InValueChange, 0.0f,  Attributes.MaxHealth);
 	
-	Attributes.Health = FMath::Clamp(Attributes.Health + InValueChange, 0.0f,  MaxHealth);
-	
-	if (FMath::IsNearlyEqual(OldHealth, Attributes.Health) == false)
+	if (IsFullHealth() == false)
 	{
 		OnHealthChanged.Broadcast(Attributes.Health, OldHealth);
+		
+		bHealthChanged = true;
 	}
-	
-	UE_LOG(LogTemp, Log, TEXT("New Health: %f, Max Health: %f"), Attributes.Health, MaxHealth);
+
+	UE_LOG(LogTemp, Log, TEXT("New Health: %f, Max Health: %f"), Attributes.Health, Attributes.MaxHealth);
+	return bHealthChanged;
+}
+
+bool URogueActionSystemComponent::IsFullHealth() const
+{
+	return FMath::IsNearlyEqual(Attributes.Health, Attributes.MaxHealth);
 }
 
 
