@@ -8,7 +8,7 @@
 
 ARogueProjectileMagic::ARogueProjectileMagic()
 {
-	ProjectileMovementComponent->InitialSpeed = 2000.0f;
+	ProjectileMovementComponent->InitialSpeed = 3000.0f;
 }
 
 void ARogueProjectileMagic::OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
