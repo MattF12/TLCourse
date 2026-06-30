@@ -7,41 +7,21 @@
 
 ARoguePickup::ARoguePickup()
 {
-	PrimaryActorTick.bCanEverTick = false;
-	
-	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
-	RootComponent = SphereComponent;
-	
-	SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	SphereComponent->SetCollisionObjectType(COLLISION_PICKUP);
-
-	SphereComponent->SetGenerateOverlapEvents(true);
-	
-	SphereComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
-	SphereComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	
-	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
-	MeshComponent->SetupAttachment(RootComponent);
+	OverlapComponent = CreateDefaultSubobject<USphereComponent>(TEXT("OverlapComp"));
+	// Always start with decent defaults, let Blueprint decide the final tweaked values
+	OverlapComponent->SetSphereRadius(128.0f);
+	RootComponent = OverlapComponent;
 }
 
-void ARoguePickup::BeginPlay()
+void ARoguePickup::PostInitializeComponents()
 {
-	Super::BeginPlay();
-	
-	SphereComponent->OnComponentBeginOverlap.AddDynamic(
-		this, &ARoguePickup::OnComponentBeginOverlap);
+	Super::PostInitializeComponents();
+
+	OverlapComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnActorOverlapped);
 }
 
-void ARoguePickup::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+void ARoguePickup::OnActorOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (APawn* Pawn = Cast<APawn>(OtherActor))
-	{
-		GivePickupTo(Pawn);
-	}
-}
-
-void ARoguePickup::GivePickupTo(APawn* PawnToGive)
-{
-	// Override by derived class
+	// All behavior is defined by the derived class.
 }

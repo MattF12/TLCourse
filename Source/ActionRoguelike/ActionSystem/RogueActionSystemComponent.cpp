@@ -6,34 +6,37 @@
 
 URogueActionSystemComponent::URogueActionSystemComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-	
 }
 
-bool URogueActionSystemComponent::ApplyHeathChange(float InValueChange)
+void URogueActionSystemComponent::ApplyHealthChange(float InValueChange)
 {
-	bool bHealthChanged = false;
-	const float OldHealth = Attributes.Health;
-	
-	Attributes.Health = FMath::Clamp(Attributes.Health + InValueChange, 0.0f,  Attributes.MaxHealth);
-	
-	if (IsFullHealth() == false)
+	float OldHealth = Attributes.Health;
+
+	Attributes.Health = FMath::Clamp(Attributes.Health + InValueChange, 0.0f, Attributes.HealthMax);
+
+	if (!FMath::IsNearlyEqual(OldHealth, Attributes.Health))
 	{
 		OnHealthChanged.Broadcast(Attributes.Health, OldHealth);
-		
-		bHealthChanged = true;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("New Health: %f, Max Health: %f"), Attributes.Health, Attributes.MaxHealth);
-	return bHealthChanged;
+	UE_LOG(LogTemp, Log, TEXT("New Health: %f, Max Health: %f"), Attributes.Health, Attributes.HealthMax);
 }
 
 bool URogueActionSystemComponent::IsFullHealth() const
 {
-	return FMath::IsNearlyEqual(Attributes.Health, Attributes.MaxHealth);
+	return FMath::IsNearlyEqual(Attributes.HealthMax, Attributes.Health);
 }
+
+float URogueActionSystemComponent::GetHealth() const
+{
+	return Attributes.Health;
+}
+
+float URogueActionSystemComponent::GetHealthMax() const
+{
+	return Attributes.HealthMax;
+}
+
 
 
 

@@ -12,14 +12,15 @@ struct FRogueAttributeSet
 {
 	GENERATED_BODY()
 	
-	FRogueAttributeSet()
-	:	MaxHealth(100.0f), Health(100.0f) {}
-	
-	UPROPERTY(BlueprintReadOnly)
-	float MaxHealth;
-	
+	FRogueAttributeSet() :
+	Health(100.0f),
+	HealthMax(100.0f) {}
+
 	UPROPERTY(BlueprintReadOnly)
 	float Health;
+
+	UPROPERTY(BlueprintReadOnly)
+	float HealthMax;
 };
 
 // "DYNAMIC": Allows delegate to be exposed to Blueprints
@@ -32,20 +33,25 @@ class ACTIONROGUELIKE_API URogueActionSystemComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-protected:
-	
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
-	FRogueAttributeSet Attributes;
-	
 public:
-	
+
+	void ApplyHealthChange(float InValueChange);
+
+	bool IsFullHealth() const;
+
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthChanged OnHealthChanged;
-	
-	bool ApplyHeathChange(float InValueChange);
 
-	UFUNCTION()
-	bool IsFullHealth() const;
+	float GetHealth() const;
+
+	float GetHealthMax() const;
+
+protected:
+
+	UPROPERTY(BlueprintReadOnly, Category="Attributes")
+	FRogueAttributeSet Attributes;
+
+public:
 	
 	URogueActionSystemComponent();
 };

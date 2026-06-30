@@ -1,36 +1,35 @@
 ﻿#include "RogueHealthPickup.h"
 
 #include "ActionSystem/RogueActionSystemComponent.h"
-#include "Player/RoguePlayerCharacter.h"
-
+#include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 ARogueHealthPickup::ARogueHealthPickup()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	// Set collision profile, make this in Project Settings, "Overlap" only to Pawn
+	OverlapComponent->SetCollisionProfileName("Pickups");
+
+	PickupMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMeshComp"));
+	PickupMeshComponent->SetCollisionProfileName("NoCollision");
+	PickupMeshComponent->SetupAttachment(RootComponent);
 }
 
-void ARogueHealthPickup::GivePickupTo(APawn* PawnToGive)
+void ARogueHealthPickup::OnActorOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	// Empty method
-	//Super::GivePickupTo(PawnToGive);
-	
-	if (ARoguePlayerCharacter* Character = Cast<ARoguePlayerCharacter>(PawnToGive))
-	{
-		if (URogueActionSystemComponent* ActionComp = Character->GetActionSystemComponent())
-		{
-			if (ActionComp->ApplyHeathChange(HealthToAdd))
-			{
-				// Play pickup sound
-				if (PickupSound)
-				{
-					UGameplayStatics::PlaySound2D(this, PickupSound);
-				}
-				
-				UE_LOG(LogTemp, Log, TEXT("Health pickup acquired!"));
+	URogueActionSystemComponent* ActionComp = OtherActor->GetComponentByClass<URogueActionSystemComponent>();
 
-				Destroy();
-			}
-		}
+	// Assert if null, then we misconfigured what we can overlap with, any Pawn should have an action component
+	// Skip pickup if already full health
+	if (ensure(ActionComp != nullptr) && !ActionComp->IsFullHealth())
+	{
+		// will clamp to the HealthMax
+		ActionComp->ApplyHealthChange(HealingAmount);
+
+		// Play before destroying actor, to have valid context and location
+		UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation(), FRotator::ZeroRotator);
+
+		// Remove Actor from world, eventually memory will be freed (garbage collection)
+		Destroy();
 	}
 }

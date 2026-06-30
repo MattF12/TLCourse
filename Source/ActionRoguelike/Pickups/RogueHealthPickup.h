@@ -11,12 +11,18 @@ class ACTIONROGUELIKE_API ARogueHealthPickup : public ARoguePickup
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float HealthToAdd = 30.0f;
+	UPROPERTY(VisibleAnywhere, Category= "Components")
+	TObjectPtr<UStaticMeshComponent> PickupMeshComponent;
 
-	UFUNCTION()
-	virtual void GivePickupTo(APawn* PawnToGive) override;
-	
+	UPROPERTY(EditDefaultsOnly, Category = "Pickup")
+	TObjectPtr<USoundBase> PickupSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Pickup")
+	float HealingAmount = 50.0f;
+
+	virtual void OnActorOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+
 public:
 	
 	ARogueHealthPickup();

@@ -14,29 +14,17 @@ class ACTIONROGUELIKE_API ARoguePickup : public AActor
 	GENERATED_BODY()
 
 protected:
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Collision")
-	TObjectPtr<USphereComponent> SphereComponent;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Mesh Component")
-	TObjectPtr<UStaticMeshComponent> MeshComponent;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Audio")
-	TObjectPtr<USoundBase> PickupSound;		
-	
-	virtual void BeginPlay() override;
+
+	UPROPERTY(VisibleAnywhere, Category="Components")
+	TObjectPtr<USphereComponent> OverlapComponent;
 	
 	UFUNCTION()
-	void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex,
-		bool bFromSweep,
-		const FHitResult& SweepResult);
-	
-	virtual void GivePickupTo(APawn* PawnToGive);
+	virtual void OnActorOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 public:
+
+	virtual void PostInitializeComponents() override;
 	
 	ARoguePickup();
 };
